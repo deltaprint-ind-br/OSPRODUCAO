@@ -7,7 +7,8 @@ import { Order, OrderStatus } from '@/lib/types'
 import { OrderCard } from './order-card'
 import { OrderModal } from './order-modal'
 import { Button } from '@/components/ui/button'
-import { ChevronLeft, ChevronRight, Plus, LogOut, Clock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, LogOut, Clock, Search, X } from 'lucide-react'
+import { Input } from '@/components/ui/input'
 import { format, addDays, subDays, isToday, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 
@@ -22,6 +23,7 @@ export function KanbanBoard({ userId }: KanbanBoardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingOrder, setEditingOrder] = useState<Order | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const supabase = createClient()
 
@@ -140,9 +142,19 @@ export function KanbanBoard({ userId }: KanbanBoardProps) {
     return `${diffMins}m`
   }
 
-  const pendingOrders = orders.filter(o => o.status === 'pending')
-  const productionOrders = orders.filter(o => o.status === 'production')
-  const finishedOrders = orders.filter(o => o.status === 'finished')
+  // Filter orders based on search query
+  const filterOrders = (ordersList: Order[]) => {
+    if (!searchQuery.trim()) return ordersList
+    const query = searchQuery.toLowerCase()
+    return ordersList.filter(
+      o => o.order_number.toLowerCase().includes(query) || 
+           o.client_name.toLowerCase().includes(query)
+    )
+  }
+
+  const pendingOrders = filterOrders(orders.filter(o => o.status === 'pending'))
+  const productionOrders = filterOrders(orders.filter(o => o.status === 'production'))
+  const finishedOrders = filterOrders(orders.filter(o => o.status === 'finished'))
 
   const columns = [
     { 
@@ -176,7 +188,7 @@ export function KanbanBoard({ userId }: KanbanBoardProps) {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
+{/* Header */}
       <header className="bg-card border-b border-border px-4 py-3">
         <div className="flex items-center justify-between">
           <Button
@@ -221,6 +233,27 @@ export function KanbanBoard({ userId }: KanbanBoardProps) {
               <LogOut className="h-5 w-5" />
             </Button>
           </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="mt-3 relative max-w-md mx-auto">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Buscar por N da OS ou cliente..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-9"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              aria-label="Limpar busca"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </header>
 
