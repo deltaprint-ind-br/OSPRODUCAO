@@ -1,11 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  output: 'export', // Adicione esta linha
   images: {
-    unoptimized: true,
+    unoptimized: true, // Necessário para imagens funcionarem no GH Pages
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;
